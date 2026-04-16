@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doku und Sofamann</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background: #faf8f3;
+    color: #222;
+    min-height: 100vh;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { margin: 0 0 16px; font-size: 22px; font-weight: 500; }
+  h2 { margin: 16px 0 12px; font-size: 18px; font-weight: 500; }
+  h3 { margin: 12px 0 8px; font-size: 16px; font-weight: 500; }
+  .card {
+    background: white;
+    border: 1px solid #e5e1d5;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  button {
+    background: #3c3489;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  button:hover { background: #26215c; }
+  button.secondary {
+    background: transparent;
+    color: #3c3489;
+    border: 1px solid #d3d1c7;
+  }
+  button.secondary:hover { background: #f1efe8; color: #26215c; }
+  button.danger { background: #a32d2d; }
+  button.danger:hover { background: #791f1f; }
+  button.small { padding: 6px 12px; font-size: 13px; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d3d1c7;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: white;
+  }
+  input:focus, select:focus { outline: none; border-color: #3c3489; }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #5f5e5a;
+    margin-bottom: 4px;
+  }
+  .variant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .variant-card {
+    padding: 20px;
+    border: 2px solid #e5e1d5;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    background: white;
+  }
+  .variant-card:hover { border-color: #3c3489; }
+  .variant-card .num {
+    font-size: 36px;
+    font-weight: 500;
+    color: #3c3489;
+    margin-bottom: 4px;
+  }
+  .variant-card .label { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .variant-card .desc { font-size: 13px; color: #5f5e5a; }
+  .table-wrapper { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+  table.score {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.score th, table.score td {
+    border: 1px solid #d3d1c7;
+    padding: 8px;
+    text-align: center;
+    min-width: 52px;
+  }
+  table.score th {
+    background: #f1efe8;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+  }
+  table.score td.current {
+    font-weight: 500;
+    font-size: 15px;
+  }
+  table.score td.positive { color: #0f6e56; }
+  table.score td.negative { color: #a32d2d; }
+  table.score td.dealer { background: #faeeda; }
+  table.score tr.round-end td { border-bottom: 3px solid #888780; }
+  table.score td.editable {
+    cursor: pointer;
+    background: #eeedfe;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  table.score td.editable:hover {
+    background: #cecbf6;
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 150px; }
+  .player-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .chip {
+    padding: 8px 14px;
+    border: 1px solid #d3d1c7;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    background: white;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .chip.selected {
+    background: #3c3489;
+    color: white;
+    border-color: #3c3489;
+  }
+  .chip.dealer {
+    background: #faeeda;
+    border-color: #ba7517;
+    color: #854f0b;
+    cursor: default;
+  }
+  .chip.dealer.selected { background: #3c3489; color: white; border-color: #3c3489; }
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+  .avatar svg { width: 100%; height: 100%; display: block; }
+  .chip .avatar { margin-right: 6px; margin-left: -4px; }
+  .chip { display: inline-flex; align-items: center; }
+  .avatar-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .avatar-option {
+    padding: 6px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: border-color 0.15s;
+  }
+  .avatar-option:hover { border-color: #d3d1c7; }
+  .avatar-option.selected { border-color: #3c3489; background: #eeedfe; }
+  .avatar-option .avatar { width: 44px; height: 44px; }
+  .avatar-option .label { font-size: 11px; color: #5f5e5a; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: #f1efe8;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .stat .name { font-size: 13px; color: #5f5e5a; margin-bottom: 4px; }
+  .stat .value { font-size: 22px; font-weight: 500; }
+  .stat .value.positive { color: #0f6e56; }
+  .stat .value.negative { color: #a32d2d; }
+  .hint {
+    font-size: 13px;
+    color: #5f5e5a;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: #eeedfe;
+    color: #3c3489;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  .empty { text-align: center; color: #5f5e5a; padding: 24px; font-size: 14px; }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #5f5e5a;
+  }
+  .toggle-row input { width: auto; }
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .card { padding: 14px; }
+    h1 { font-size: 19px; }
+    table.score th, table.score td { padding: 6px 4px; font-size: 13px; min-width: 42px; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+const STORAGE_KEY = 'doppelkopf_state_v1';
+
+const DEFAULT_POOL = ['Sutter', 'TT', 'Spooky', 'MC', 'Lars', 'Sascha'];
+
+const AVATARS = {
+  pirate: { bg: '#f4c0d1', name: 'Pirat', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="34" r="20" fill="#f5d4a8"/><path d="M12 26 Q32 10 52 26 L52 20 Q32 8 12 20 Z" fill="#222"/><path d="M40 28 L50 22 L48 30 Z" fill="#c0392b"/><circle cx="26" cy="36" r="2" fill="#222"/><path d="M34 32 Q38 32 42 36 Q42 40 38 40 Q34 40 34 36 Z" fill="#222"/><path d="M24 44 Q32 48 40 44" stroke="#222" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>` },
+  ninja: { bg: '#cecbf6', name: 'Ninja', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="34" r="20" fill="#f5d4a8"/><path d="M12 28 Q32 18 52 28 L52 22 Q32 12 12 22 Z" fill="#2c3e50"/><rect x="12" y="34" width="40" height="8" fill="#2c3e50"/><circle cx="26" cy="32" r="2" fill="#222"/><circle cx="38" cy="32" r="2" fill="#222"/><path d="M14 40 L50 40" stroke="#34495e" stroke-width="1"/></svg>` },
+  viking: { bg: '#fac775', name: 'Wikinger', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="36" r="18" fill="#f5d4a8"/><path d="M14 30 Q32 14 50 30 L48 22 Q32 10 16 22 Z" fill="#8b7355"/><path d="M14 28 L10 20 L16 24 Z" fill="#c0c0c0"/><path d="M50 28 L54 20 L48 24 Z" fill="#c0c0c0"/><circle cx="26" cy="36" r="2" fill="#222"/><circle cx="38" cy="36" r="2" fill="#222"/><path d="M22 44 Q32 42 42 44 L42 52 Q32 54 22 52 Z" fill="#c0392b"/><path d="M28 44 L28 52 M32 43 L32 52 M36 44 L36 52" stroke="#f5d4a8" stroke-width="1.5"/></svg>` },
+  alien: { bg: '#9fe1cb', name: 'Alien', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><ellipse cx="32" cy="34" rx="18" ry="22" fill="#7ed957"/><ellipse cx="24" cy="32" rx="5" ry="7" fill="#222"/><ellipse cx="40" cy="32" rx="5" ry="7" fill="#222"/><ellipse cx="24" cy="30" rx="2" ry="3" fill="#fff"/><ellipse cx="40" cy="30" rx="2" ry="3" fill="#fff"/><path d="M28 44 Q32 46 36 44" stroke="#222" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="20" cy="22" r="2" fill="#5fb83d"/><circle cx="44" cy="22" r="2" fill="#5fb83d"/></svg>` },
+  robot: { bg: '#b5d4f4', name: 'Roboter', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="18" width="36" height="32" rx="4" fill="#95a5a6"/><rect x="20" y="26" width="8" height="8" rx="1" fill="#3498db"/><rect x="36" y="26" width="8" height="8" rx="1" fill="#3498db"/><circle cx="24" cy="30" r="2" fill="#fff"/><circle cx="40" cy="30" r="2" fill="#fff"/><rect x="24" y="40" width="16" height="3" fill="#2c3e50"/><rect x="28" y="10" width="8" height="6" fill="#95a5a6"/><circle cx="32" cy="8" r="2" fill="#e74c3c"/><line x1="32" y1="10" x2="32" y2="6" stroke="#95a5a6" stroke-width="1"/></svg>` },
+  cowboy: { bg: '#f0997b', name: 'Cowboy', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="36" r="18" fill="#f5d4a8"/><path d="M8 26 Q32 22 56 26 Q54 20 32 18 Q10 20 8 26 Z" fill="#8b4513"/><ellipse cx="32" cy="22" rx="10" ry="6" fill="#8b4513"/><circle cx="26" cy="36" r="2" fill="#222"/><circle cx="38" cy="36" r="2" fill="#222"/><path d="M28 44 Q32 46 36 44" stroke="#222" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M22 48 Q32 52 42 48 L42 52 L22 52 Z" fill="#d4a574"/></svg>` },
+  wizard: { bg: '#afa9ec', name: 'Zauberer', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="38" r="16" fill="#f5d4a8"/><path d="M18 30 L32 6 L46 30 Z" fill="#4a3c8f"/><circle cx="32" cy="14" r="2" fill="#f1c40f"/><path d="M20 40 Q32 42 44 40 Q40 52 32 52 Q24 52 20 40 Z" fill="#d3d1c7"/><circle cx="26" cy="38" r="1.5" fill="#222"/><circle cx="38" cy="38" r="1.5" fill="#222"/></svg>` },
+  clown: { bg: '#f7c1c1', name: 'Clown', svg: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="34" r="18" fill="#f5d4a8"/><path d="M10 28 Q18 10 32 16 Q46 10 54 28 Q44 22 32 22 Q20 22 10 28 Z" fill="#e74c3c"/><circle cx="24" cy="34" r="2.5" fill="#222"/><circle cx="40" cy="34" r="2.5" fill="#222"/><circle cx="32" cy="40" r="4" fill="#e74c3c"/><path d="M22 46 Q32 52 42 46" stroke="#c0392b" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="18" cy="36" r="3" fill="#e74c3c" opacity="0.6"/><circle cx="46" cy="36" r="3" fill="#e74c3c" opacity="0.6"/></svg>` },
+};
+const AVATAR_KEYS = Object.keys(AVATARS);
+
+let state = {
+  screen: 'start',
+  variant: null,
+  playerPool: [...DEFAULT_POOL],
+  playerAvatars: {},
+  players: [],
+  dealerIndex: 0,
+  games: [],
+  roundSize: 0,
+};
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch(e) {}
+  if (!state.playerPool || state.playerPool.length === 0) {
+    state.playerPool = [...DEFAULT_POOL];
+  }
+  if (!state.playerAvatars) state.playerAvatars = {};
+  state.playerPool.forEach((name, i) => {
+    if (!state.playerAvatars[name]) {
+      state.playerAvatars[name] = AVATAR_KEYS[i % AVATAR_KEYS.length];
+    }
+  });
+}
+
+function getAvatar(name) {
+  const key = state.playerAvatars[name] || AVATAR_KEYS[0];
+  return AVATARS[key] || AVATARS[AVATAR_KEYS[0]];
+}
+
+function avatarHtml(name, size) {
+  const a = getAvatar(name);
+  const s = size || 36;
+  return `<span class="avatar" style="width:${s}px;height:${s}px;background:${a.bg};">${a.svg}</span>`;
+}
+
+function totalFor(playerIndex) {
+  return state.games.reduce((sum, g) => sum + (g.points[playerIndex] || 0), 0);
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (state.screen === 'start') return renderStart(app);
+  if (state.screen === 'setup') return renderSetup(app);
+  if (state.screen === 'game') return renderGame(app);
+}
+
+function renderStart(app) {
+  app.innerHTML = `
+    <h1>Doku und Sofamann</h1>
+    <div class="card">
+      <h2>Welche Variante wird gespielt?</h2>
+      <div class="variant-grid">
+        <div class="variant-card" onclick="selectVariant(4)">
+          <div class="num">4</div>
+          <div class="label">Normal</div>
+          <div class="desc">4 Spieler, alle spielen jede Runde</div>
+        </div>
+        <div class="variant-card" onclick="selectVariant(5)">
+          <div class="num">5</div>
+          <div class="label">Mit Geber</div>
+          <div class="desc">5 Spieler, einer gibt und setzt aus</div>
+        </div>
+        <div class="variant-card" onclick="selectVariant(6)">
+          <div class="num">6</div>
+          <div class="label">Triplehead</div>
+          <div class="desc">6 Spieler, Re und Contra je zu dritt</div>
+        </div>
+      </div>
+      ${state.games.length > 0 ? `
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e1d5;">
+          <div class="hint" style="margin-bottom: 10px;">
+            Letzte Runde: ${state.variant} Spieler, ${state.games.length} Spiele gespielt
+          </div>
+          <button onclick="continueGame()">Letzte Runde fortsetzen</button>
+          <button class="secondary small" onclick="clearAll()" style="margin-left: 8px;">Löschen</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function selectVariant(v) {
+  state.variant = v;
+  state.roundSize = v;
+  state.players = [];
+  state.dealerIndex = 0;
+  state.games = [];
+  state.screen = 'setup';
+  save();
+  render();
+}
+
+function continueGame() {
+  state.screen = 'game';
+  save();
+  render();
+}
+
+function clearAll() {
+  if (confirm('Wirklich alle Daten löschen?')) {
+    state = { screen: 'start', variant: null, players: [], dealerIndex: 0, games: [], roundSize: 0 };
+    save();
+    render();
+  }
+}
+
+function renderSetup(app) {
+  app.innerHTML = `
+    <h1>Spielernamen <span class="badge">${state.variant} Spieler</span></h1>
+    <div class="card">
+      <h2>Wer spielt mit?</h2>
+      <div class="hint" style="margin-bottom: 12px;">
+        Wähle ${state.variant} Spieler aus.
+        ${state.variant === 5 ? ' Bei 5 Spielern setzt immer der Geber aus, der Geber wechselt nach jedem Spiel.' : ''}
+        ${state.variant === 6 ? ' Bei Triplehead spielen 3 gegen 3.' : ''}
+      </div>
+      <label>Spielerpool (${state.players.length}/${state.variant} ausgewählt)</label>
+      <div class="player-chips">
+        ${state.playerPool.map((name, i) => {
+          const sel = state.players.indexOf(name);
+          const isSelected = sel >= 0;
+          return `
+            <div class="chip ${isSelected ? 'selected' : ''}"
+                 onclick="togglePoolPlayer(${i})"
+                 oncontextmenu="event.preventDefault(); editPoolPlayer(${i});"
+                 ontouchstart="startLongPress(${i})"
+                 ontouchend="cancelLongPress()"
+                 ontouchmove="cancelLongPress()">
+              ${avatarHtml(name, 28)}
+              ${isSelected ? `${sel + 1}. ` : ''}${escapeHtml(name)}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top: 14px;">
+        <label>Spieler hinzufügen</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="new-player-input" placeholder="Name" onkeydown="if(event.key==='Enter')addPoolPlayer()">
+          <button class="secondary small" onclick="addPoolPlayer()">+ Hinzufügen</button>
+        </div>
+        <div class="hint">Tipp: Lange auf einen Namen drücken zum Umbenennen oder Löschen.</div>
+      </div>
+      ${state.variant === 5 && state.players.length === 5 ? `
+        <div style="margin-top: 14px;">
+          <label>Wer gibt zuerst? (setzt beim ersten Spiel aus)</label>
+          <div class="player-chips">
+            ${state.players.map((name, i) => `
+              <div class="chip ${state.dealerIndex === i ? 'selected' : ''}" onclick="setDealer(${i})">
+                ${avatarHtml(name, 28)}
+                ${escapeHtml(name)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      <div class="actions">
+        <button onclick="startGame()" ${state.players.length !== state.variant ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>Los geht's</button>
+        <button class="secondary" onclick="backToStart()">Zurück</button>
+      </div>
+    </div>
+  `;
+}
+
+function togglePoolPlayer(poolIdx) {
+  const name = state.playerPool[poolIdx];
+  const existing = state.players.indexOf(name);
+  if (existing >= 0) {
+    state.players.splice(existing, 1);
+  } else {
+    if (state.players.length >= state.variant) {
+      alert(`Es können nur ${state.variant} Spieler ausgewählt werden. Deselektiere erst einen anderen.`);
+      return;
+    }
+    state.players.push(name);
+  }
+  if (state.dealerIndex >= state.players.length) state.dealerIndex = 0;
+  save();
+  render();
+}
+
+function addPoolPlayer() {
+  const inp = document.getElementById('new-player-input');
+  const name = (inp?.value || '').trim();
+  if (!name) return;
+  if (state.playerPool.includes(name)) {
+    alert('Diesen Namen gibt es schon.');
+    return;
+  }
+  state.playerPool.push(name);
+  save();
+  render();
+}
+
+function removePoolPlayer(poolIdx) {
+  const name = state.playerPool[poolIdx];
+  if (!confirm(`"${name}" aus Spielerliste löschen?`)) return;
+  state.playerPool.splice(poolIdx, 1);
+  const inGame = state.players.indexOf(name);
+  if (inGame >= 0) state.players.splice(inGame, 1);
+  save();
+  render();
+}
+
+function renamePoolPlayer(poolIdx) {
+  const oldName = state.playerPool[poolIdx];
+  const newName = prompt('Neuer Name für ' + oldName + ':', oldName);
+  if (!newName || !newName.trim()) return;
+  const trimmed = newName.trim();
+  if (trimmed === oldName) return;
+  if (state.playerPool.includes(trimmed)) {
+    alert('Diesen Namen gibt es schon.');
+    return;
+  }
+  state.playerPool[poolIdx] = trimmed;
+  const inGame = state.players.indexOf(oldName);
+  if (inGame >= 0) state.players[inGame] = trimmed;
+  save();
+  render();
+}
+
+let longPressTimer = null;
+function startLongPress(poolIdx) {
+  cancelLongPress();
+  longPressTimer = setTimeout(() => {
+    editPoolPlayer(poolIdx);
+    longPressTimer = null;
+  }, 600);
+}
+function cancelLongPress() {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
+function editPoolPlayer(poolIdx) {
+  const name = state.playerPool[poolIdx];
+  const action = prompt(`"${name}" — was tun?\n\nTippe:\n  a = Avatar ändern\n  u = Umbenennen\n  l = Löschen\n  (leer = Abbrechen)`, '');
+  if (action === 'a' || action === 'A') showAvatarPicker(poolIdx);
+  else if (action === 'u' || action === 'U') renamePoolPlayer(poolIdx);
+  else if (action === 'l' || action === 'L') removePoolPlayer(poolIdx);
+}
+
+function showAvatarPicker(poolIdx) {
+  const name = state.playerPool[poolIdx];
+  const current = state.playerAvatars[name];
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:12px;padding:20px;max-width:400px;width:100%;max-height:90vh;overflow:auto;';
+  box.innerHTML = `
+    <h2 style="margin:0 0 12px;font-size:18px;">Avatar für ${escapeHtml(name)}</h2>
+    <div class="avatar-picker">
+      ${AVATAR_KEYS.map(key => {
+        const a = AVATARS[key];
+        return `
+          <div class="avatar-option ${current === key ? 'selected' : ''}" data-key="${key}">
+            <span class="avatar" style="background:${a.bg};">${a.svg}</span>
+            <span class="label">${a.name}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
+      <button class="secondary" id="cancel-avatar">Abbrechen</button>
+    </div>
+  `;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  box.querySelectorAll('.avatar-option').forEach(el => {
+    el.onclick = () => {
+      state.playerAvatars[name] = el.dataset.key;
+      save();
+      overlay.remove();
+      render();
+    };
+  });
+  box.querySelector('#cancel-avatar').onclick = () => overlay.remove();
+}
+
+function setDealer(i) {
+  state.dealerIndex = i;
+  save();
+  render();
+}
+
+function backToStart() {
+  state.screen = 'start';
+  save();
+  render();
+}
+
+function startGame() {
+  if (state.players.length !== state.variant) {
+    alert(`Bitte genau ${state.variant} Spieler auswählen.`);
+    return;
+  }
+  state.screen = 'game';
+  save();
+  render();
+}
+
+function renderGame(app) {
+  app.innerHTML = `
+    <h1>${state.variant}er Doppelkopf
+      <span class="badge">${state.games.length} ${state.games.length === 1 ? 'Spiel' : 'Spiele'}</span>
+    </h1>
+
+    <div class="card">
+      <h2>Gesamtstand</h2>
+      <div class="stats-grid">
+        ${state.players.map((name, i) => {
+          const t = totalFor(i);
+          const cls = t > 0 ? 'positive' : t < 0 ? 'negative' : '';
+          return `
+            <div class="stat">
+              <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
+                ${avatarHtml(name, 28)}
+                <div class="name" style="margin:0;">${escapeHtml(name)}</div>
+              </div>
+              <div class="value ${cls}">${t > 0 ? '+' : ''}${t}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card" id="input-card">
+      <h2>Neues Spiel eintragen</h2>
+      ${renderGameInput()}
+    </div>
+
+    <div class="card">
+      <h2>Verlauf</h2>
+      ${renderHistoryTable()}
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="backToStart()">Runde beenden / Neue Variante</button>
+      <button class="secondary small" onclick="clearAll()">Alles löschen</button>
+    </div>
+  `;
+}
+
+function getPlayersInGame() {
+  if (state.variant !== 5) return state.players.map((_, i) => i);
+  const gameNum = state.games.length;
+  const dealer = (state.dealerIndex + gameNum) % 5;
+  return state.players.map((_, i) => i).filter(i => i !== dealer);
+}
+
+function getCurrentDealer() {
+  if (state.variant !== 5) return -1;
+  const gameNum = state.games.length;
+  return (state.dealerIndex + gameNum) % 5;
+}
+
+let inputState = null;
+function resetInputState() {
+  inputState = {
+    points: '',
+    winners: [],
+    isSolo: false,
+    soloPlayer: null,
+  };
+}
+
+function renderGameInput() {
+  if (!inputState) resetInputState();
+  const activePlayers = getPlayersInGame();
+  const dealer = getCurrentDealer();
+
+  const isTriplehead = state.variant === 6;
+  const perSideCount = isTriplehead ? 3 : 2;
+
+  let helpText = '';
+  if (inputState.isSolo) {
+    const losersCount = state.variant === 6 ? 5 : (state.variant === 5 ? 3 : 3);
+    helpText = `Solo: Gib die Punkte des Solo-Spielers ein (positiv bei Sieg, negativ bei Niederlage). Die ${losersCount} Gegner teilen sich die Punkte gleichmäßig auf.${isTriplehead ? ' (Triplehead-Solo wird mit 3 Kartendecks gespielt.)' : ''}`;
+  } else if (isTriplehead) {
+    helpText = 'Wähle die 3 Spieler der Gewinner-Seite. Jeder bekommt die Punkte, die anderen 3 bekommen das Negative.';
+  } else {
+    helpText = `Wähle die ${perSideCount} Gewinner (Re oder Contra, je nachdem wer gewonnen hat). Sie bekommen die Punkte positiv, die Verlierer negativ.`;
+  }
+
+  return `
+    ${dealer >= 0 ? `
+      <div class="hint" style="margin-bottom: 10px;">
+        Geber: <strong>${escapeHtml(state.players[dealer])}</strong> (setzt dieses Spiel aus)
+      </div>
+    ` : ''}
+
+    ${`
+      <div class="toggle-row">
+        <input type="checkbox" id="solo-toggle" ${inputState.isSolo ? 'checked' : ''} onchange="toggleSolo(this.checked)">
+        <label for="solo-toggle" style="margin: 0; cursor: pointer;">Solo (1 gegen Rest)</label>
+      </div>
+    `}
+
+    ${inputState.isSolo ? `
+      <div style="margin-top: 12px;">
+        <label>Solo-Spieler</label>
+        <div class="player-chips">
+          ${activePlayers.map(i => `
+            <div class="chip ${inputState.soloPlayer === i ? 'selected' : ''}"
+                 onclick="setSoloPlayer(${i})">
+              ${avatarHtml(state.players[i], 28)}
+              ${escapeHtml(state.players[i])}
+            </div>
+          `).join('')}
+        </div>
+        <div class="hint">Hat der Solo-Spieler gewonnen? Punkte positiv eingeben, sonst negativ.</div>
+      </div>
+    ` : `
+      <div style="margin-top: 12px;">
+        <label>Gewinner (${perSideCount} auswählen)</label>
+        <div class="player-chips">
+          ${activePlayers.map(i => `
+            <div class="chip ${inputState.winners.includes(i) ? 'selected' : ''}"
+                 onclick="toggleWinner(${i})">
+              ${avatarHtml(state.players[i], 28)}
+              ${escapeHtml(state.players[i])}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `}
+
+    <div style="margin-top: 14px;">
+      <label>Punkte dieses Spiels</label>
+      <input type="number" id="points-input" value="${inputState.points}"
+             oninput="inputState.points = this.value"
+             placeholder="z.B. 3" inputmode="numeric">
+      <div class="hint">${helpText}</div>
+    </div>
+
+    <div class="actions">
+      <button onclick="submitGame()">Spiel speichern</button>
+    </div>
+  `;
+}
+
+function toggleSolo(v) {
+  inputState.isSolo = v;
+  inputState.winners = [];
+  inputState.soloPlayer = null;
+  renderGameInputOnly();
+}
+
+function setSoloPlayer(i) {
+  inputState.soloPlayer = inputState.soloPlayer === i ? null : i;
+  renderGameInputOnly();
+}
+
+function toggleWinner(i) {
+  const perSideCount = state.variant === 6 ? 3 : 2;
+  const idx = inputState.winners.indexOf(i);
+  if (idx >= 0) {
+    inputState.winners.splice(idx, 1);
+  } else {
+    if (inputState.winners.length >= perSideCount) {
+      inputState.winners.shift();
+    }
+    inputState.winners.push(i);
+  }
+  renderGameInputOnly();
+}
+
+function renderGameInputOnly() {
+  const card = document.getElementById('input-card');
+  const points = document.getElementById('points-input')?.value || inputState.points;
+  inputState.points = points;
+  card.innerHTML = '<h2>Neues Spiel eintragen</h2>' + renderGameInput();
+  const inp = document.getElementById('points-input');
+  if (inp) inp.focus();
+}
+
+function submitGame() {
+  const points = parseInt(inputState.points, 10);
+  if (isNaN(points) || points === 0) {
+    alert('Bitte Punkte eingeben (nicht 0).');
+    return;
+  }
+
+  const activePlayers = getPlayersInGame();
+  const dealer = getCurrentDealer();
+  const perGame = Array(state.variant).fill(0);
+
+  if (inputState.isSolo) {
+    if (inputState.soloPlayer === null) {
+      alert('Bitte Solo-Spieler auswählen.');
+      return;
+    }
+    const soloIdx = inputState.soloPlayer;
+    const others = activePlayers.filter(i => i !== soloIdx);
+    const perLoser = Math.round(points / others.length);
+    perGame[soloIdx] = points;
+    others.forEach(i => { perGame[i] = -perLoser; });
+  } else {
+    const perSideCount = state.variant === 6 ? 3 : 2;
+    if (inputState.winners.length !== perSideCount) {
+      alert(`Bitte genau ${perSideCount} Gewinner auswählen.`);
+      return;
+    }
+    const winners = inputState.winners;
+    const losers = activePlayers.filter(i => !winners.includes(i));
+    winners.forEach(i => { perGame[i] = points; });
+    losers.forEach(i => { perGame[i] = -points; });
+  }
+
+  state.games.push({
+    points: perGame,
+    rawPoints: points,
+    dealer: dealer,
+    isSolo: inputState.isSolo,
+    soloPlayer: inputState.soloPlayer,
+    winners: [...inputState.winners],
+  });
+
+  resetInputState();
+  save();
+  render();
+  setTimeout(() => {
+    const inp = document.getElementById('points-input');
+    if (inp) inp.focus();
+  }, 50);
+}
+
+function editGame(gameIdx) {
+  const g = state.games[gameIdx];
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const activePlayers = state.players.map((_, i) => i).filter(i => i !== g.dealer);
+  const isTriplehead = state.variant === 6;
+  const perSideCount = isTriplehead ? 3 : 2;
+
+  let editData = {
+    points: g.rawPoints,
+    isSolo: g.isSolo,
+    soloPlayer: g.soloPlayer,
+    winners: [...g.winners],
+  };
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:12px;padding:20px;max-width:500px;width:100%;max-height:90vh;overflow:auto;';
+
+  function renderModal() {
+    box.innerHTML = `
+      <h2 style="margin:0 0 12px;font-size:18px;">Spiel ${gameIdx + 1} bearbeiten</h2>
+      ${g.dealer >= 0 ? `<div class="hint" style="margin-bottom:10px;">Geber: <strong>${escapeHtml(state.players[g.dealer])}</strong></div>` : ''}
+      <div class="toggle-row">
+        <input type="checkbox" id="edit-solo" ${editData.isSolo ? 'checked' : ''}>
+        <label for="edit-solo" style="margin:0;cursor:pointer;">Solo</label>
+      </div>
+      ${editData.isSolo ? `
+        <div style="margin-top:12px;">
+          <label>Solo-Spieler</label>
+          <div class="player-chips" id="edit-solo-chips">
+            ${activePlayers.map(i => `
+              <div class="chip ${editData.soloPlayer === i ? 'selected' : ''}" data-player="${i}">
+                ${avatarHtml(state.players[i], 28)}
+                ${escapeHtml(state.players[i])}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : `
+        <div style="margin-top:12px;">
+          <label>Gewinner (${perSideCount} auswählen)</label>
+          <div class="player-chips" id="edit-winner-chips">
+            ${activePlayers.map(i => `
+              <div class="chip ${editData.winners.includes(i) ? 'selected' : ''}" data-player="${i}">
+                ${avatarHtml(state.players[i], 28)}
+                ${escapeHtml(state.players[i])}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `}
+      <div style="margin-top:14px;">
+        <label>Punkte</label>
+        <input type="number" id="edit-points" value="${editData.points}" inputmode="numeric">
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;">
+        <button class="danger" id="edit-delete">Spiel löschen</button>
+        <div style="display:flex;gap:8px;">
+          <button class="secondary" id="edit-cancel">Abbrechen</button>
+          <button id="edit-save">Speichern</button>
+        </div>
+      </div>
+    `;
+
+    box.querySelector('#edit-solo').onchange = (e) => {
+      editData.isSolo = e.target.checked;
+      editData.winners = [];
+      editData.soloPlayer = null;
+      editData.points = parseInt(box.querySelector('#edit-points').value, 10) || 0;
+      renderModal();
+    };
+
+    if (editData.isSolo) {
+      box.querySelectorAll('#edit-solo-chips .chip').forEach(el => {
+        el.onclick = () => {
+          const p = parseInt(el.dataset.player, 10);
+          editData.soloPlayer = editData.soloPlayer === p ? null : p;
+          editData.points = parseInt(box.querySelector('#edit-points').value, 10) || 0;
+          renderModal();
+        };
+      });
+    } else {
+      box.querySelectorAll('#edit-winner-chips .chip').forEach(el => {
+        el.onclick = () => {
+          const p = parseInt(el.dataset.player, 10);
+          const idx = editData.winners.indexOf(p);
+          if (idx >= 0) {
+            editData.winners.splice(idx, 1);
+          } else {
+            if (editData.winners.length >= perSideCount) editData.winners.shift();
+            editData.winners.push(p);
+          }
+          editData.points = parseInt(box.querySelector('#edit-points').value, 10) || 0;
+          renderModal();
+        };
+      });
+    }
+
+    box.querySelector('#edit-cancel').onclick = () => overlay.remove();
+
+    box.querySelector('#edit-delete').onclick = () => {
+      if (confirm(`Spiel ${gameIdx + 1} wirklich löschen?`)) {
+        state.games.splice(gameIdx, 1);
+        save();
+        overlay.remove();
+        render();
+      }
+    };
+
+    box.querySelector('#edit-save').onclick = () => {
+      const points = parseInt(box.querySelector('#edit-points').value, 10);
+      if (isNaN(points) || points === 0) {
+        alert('Bitte Punkte eingeben (nicht 0).');
+        return;
+      }
+      const perGame = Array(state.variant).fill(0);
+
+      if (editData.isSolo) {
+        if (editData.soloPlayer === null) {
+          alert('Bitte Solo-Spieler auswählen.');
+          return;
+        }
+        const others = activePlayers.filter(i => i !== editData.soloPlayer);
+        const perLoser = Math.round(points / others.length);
+        perGame[editData.soloPlayer] = points;
+        others.forEach(i => { perGame[i] = -perLoser; });
+      } else {
+        if (editData.winners.length !== perSideCount) {
+          alert(`Bitte genau ${perSideCount} Gewinner auswählen.`);
+          return;
+        }
+        const losers = activePlayers.filter(i => !editData.winners.includes(i));
+        editData.winners.forEach(i => { perGame[i] = points; });
+        losers.forEach(i => { perGame[i] = -points; });
+      }
+
+      state.games[gameIdx] = {
+        points: perGame,
+        rawPoints: points,
+        dealer: g.dealer,
+        isSolo: editData.isSolo,
+        soloPlayer: editData.soloPlayer,
+        winners: [...editData.winners],
+      };
+      save();
+      overlay.remove();
+      render();
+    };
+  }
+
+  renderModal();
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+function renderHistoryTable() {
+  if (state.games.length === 0) {
+    return '<div class="empty">Noch keine Spiele. Trag oben dein erstes Spiel ein.</div>';
+  }
+  const runningTotals = state.players.map(() => 0);
+  const roundSize = state.variant;
+
+  let rows = '';
+  state.games.forEach((g, gi) => {
+    state.players.forEach((_, pi) => {
+      runningTotals[pi] += g.points[pi];
+    });
+    const isRoundEnd = (gi + 1) % roundSize === 0;
+
+    let gameCell = '';
+    if (g.isSolo) {
+      const soloIdx = g.soloPlayer;
+      const loserPoints = Math.abs(g.points[g.points.findIndex((p, i) => i !== soloIdx && p !== 0)]);
+      gameCell = `${g.rawPoints}/${loserPoints}`;
+    } else {
+      gameCell = `${g.rawPoints}`;
+    }
+
+    rows += `<tr class="${isRoundEnd ? 'round-end' : ''}">
+      <td style="color: #5f5e5a;">${gi + 1}</td>
+      ${state.players.map((_, pi) => {
+        const t = runningTotals[pi];
+        const isDealer = g.dealer === pi;
+        const cls = [];
+        cls.push('current');
+        if (t > 0) cls.push('positive');
+        else if (t < 0) cls.push('negative');
+        if (isDealer) cls.push('dealer');
+        return `<td class="${cls.join(' ')}">${isDealer ? '—' : (t > 0 ? '+' : '') + t}</td>`;
+      }).join('')}
+      <td class="editable" onclick="editGame(${gi})" title="Klicken zum Bearbeiten">${gameCell}${g.isSolo ? ' <span style="font-size:11px;color:#5f5e5a;">S</span>' : ''}</td>
+    </tr>`;
+  });
+
+  return `
+    <div class="table-wrapper">
+      <table class="score">
+        <thead>
+          <tr>
+            <th>#</th>
+            ${state.players.map(n => `<th><div style="display:flex;flex-direction:column;align-items:center;gap:2px;">${avatarHtml(n, 24)}<span>${escapeHtml(n)}</span></div></th>`).join('')}
+            <th>Spiel</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="hint" style="margin-top: 10px;">
+      Dicke Linie = Ende einer Runde (jeder ${roundSize === 4 ? 'war' : roundSize === 5 ? 'hat' : 'ist'} einmal ${roundSize === 5 ? 'Geber gewesen' : 'dran gewesen'}).
+      ${state.variant === 5 ? 'Der Geber ist mit — markiert und gelb hinterlegt.' : ''}
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+load();
+render();
+</script>
+</body>
+</html>
