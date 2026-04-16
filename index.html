@@ -1054,7 +1054,7 @@ function renderGame(app) {
     </div>
 
     <div class="card" id="input-card">
-      <h2>Neues Spiel eintragen</h2>
+      <h2>Runde eintragen</h2>
       ${renderGameInput()}
     </div>
 
@@ -1198,7 +1198,7 @@ function renderGameInputOnly() {
   const card = document.getElementById('input-card');
   const points = document.getElementById('points-input')?.value || inputState.points;
   inputState.points = points;
-  card.innerHTML = '<h2>Neues Spiel eintragen</h2>' + renderGameInput();
+  card.innerHTML = '<h2>Runde eintragen</h2>' + renderGameInput();
   const inp = document.getElementById('points-input');
   if (inp) inp.focus();
 }
